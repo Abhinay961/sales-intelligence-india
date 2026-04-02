@@ -1,52 +1,36 @@
 import streamlit as st
-import os
 from reports.generate_report import generate_pdf
 
 def app(df):
 
-    st.markdown("## 📄 Business Report")
+    st.markdown("## 📄 Business Report Generator")
 
-    total_rev = df["revenue"].sum()
-    total_profit = df["profit"].sum()
-    orders = len(df)
+    # -------------------------------
+    # FILTERS
+    # -------------------------------
+    states = sorted(df["state"].unique())
+    categories = sorted(df["product_category"].unique())
 
-    c1, c2, c3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
-    c1.metric("Revenue", f"₹{int(total_rev):,}")
-    c2.metric("Profit", f"₹{int(total_profit):,}")
-    c3.metric("Orders", orders)
+    with col1:
+        state = st.selectbox("Select State", states)
+
+    with col2:
+        category = st.selectbox("Select Category", categories)
 
     st.markdown("---")
 
     # -------------------------------
-    # INSIGHTS
+    # GENERATE REPORT
     # -------------------------------
-    st.subheader("📊 Business Summary")
+    if st.button("📥 Generate Report"):
 
-    top_category = df.groupby("product_category")["revenue"].sum().idxmax()
-    top_state = df.groupby("state")["revenue"].sum().idxmax()
+        path = generate_pdf(df, state, category)
 
-    st.write(f"🏆 Top Category: **{top_category}**")
-    st.write(f"📍 Top State: **{top_state}**")
+        st.success("✅ Report Generated!")
 
-    if total_profit > total_rev * 0.25:
-        st.success("Strong profitability observed")
-    else:
-        st.warning("Margins can be improved")
-
-    st.markdown("---")
-
-    # -------------------------------
-    # GENERATE + DOWNLOAD REPORT
-    # -------------------------------
-    if st.button("📥 Generate Report", key="generate_report_btn"):
-
-        file_path = generate_pdf(df)
-
-        st.success("✅ Report Generated Successfully!")
-
-        # 🔥 DOWNLOAD BUTTON
-        with open(file_path, "rb") as f:
+        with open(path, "rb") as f:
             st.download_button(
                 label="⬇️ Download Report",
                 data=f,
