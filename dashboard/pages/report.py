@@ -10,7 +10,7 @@ def app(df):
     st.success("📌 Insights generated from real sales data")
 
     if st.button("📥 Download Full PDF Report", key="pdf_download"):
-        path = generate_pdf()
+        path = generate_pdf(df)
 
         with open(path, "rb") as f:
             st.download_button(
