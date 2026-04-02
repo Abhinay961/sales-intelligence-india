@@ -1,11 +1,4 @@
+data/
+reports/assets/
 __pycache__/
 *.pyc
-.DS_Store
-
-data/
-models/
-
-reports/assets/
-reports/*.pdf
-
-venv/

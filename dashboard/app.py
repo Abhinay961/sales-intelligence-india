@@ -3,7 +3,7 @@ import pandas as pd
 import sys, os
 
 # -------------------------------
-# PATH FIX
+# PATH SETUP
 # -------------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BASE_DIR)
@@ -11,76 +11,40 @@ sys.path.insert(0, BASE_DIR)
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
 # -------------------------------
-# ENSURE FOLDERS
-# -------------------------------
-os.makedirs(os.path.join(BASE_DIR, "data/raw"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "models"), exist_ok=True)
-
-# -------------------------------
-# IMPORT PIPELINE FUNCTIONS
+# IMPORT PIPELINE
 # -------------------------------
 from src.data_generation import generate_data
 from src.preprocessing import run_preprocessing
 
-data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
+DATA_PATH = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 # -------------------------------
-# SAFE DATA LOADER (FINAL FIX)
+# SAFE DATA LOADER (NO BUG VERSION)
 # -------------------------------
-def load_or_create_data():
-    try:
-        if not os.path.exists(data_path):
-            generate_data()
-            run_preprocessing()
+def load_data():
 
-        df = pd.read_csv(data_path)
-
-        if df is None or df.empty:
-            raise ValueError("Empty DataFrame")
-
-        # REQUIRED COLUMNS
-        required_cols = ["price", "quantity", "discount", "month", "revenue"]
-
-        for col in required_cols:
-            if col not in df.columns:
-                raise ValueError(f"Missing column: {col}")
-
-        # ADD PROFIT IF MISSING
-        if "profit" not in df.columns:
-            df["cost"] = df["price"] * 0.7
-            df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
-
-        # ADD PRODUCT IF MISSING (🔥 FINAL FIX)
-        if "product_name" not in df.columns:
-            df["product_name"] = "Product"
-
-        if "product_category" not in df.columns:
-            df["product_category"] = "General"
-
-        return df
-
-    except Exception as e:
-        st.warning(f"⚠️ Fixing data pipeline: {e}")
-
+    if not os.path.exists(DATA_PATH):
         generate_data()
         run_preprocessing()
 
-        df = pd.read_csv(data_path)
+    df = pd.read_csv(DATA_PATH)
 
-        df["cost"] = df["price"] * 0.7
-        df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
+    # -------------------------------
+    # FORCE REQUIRED COLUMNS
+    # -------------------------------
+    df["revenue"] = df["price"] * df["quantity"] * (1 - df["discount"]/100)
+    df["cost"] = df["price"] * 0.7
+    df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
 
-        df["product_name"] = df.get("product_name", "Product")
-        df["product_category"] = df.get("product_category", "General")
+    # Safety for UI
+    if "product_name" not in df.columns:
+        df["product_name"] = "Product"
+    if "product_category" not in df.columns:
+        df["product_category"] = "General"
 
-        return df
+    return df
 
-
-# -------------------------------
-# LOAD DATA
-# -------------------------------
-df = load_or_create_data()
+df = load_data()
 
 # -------------------------------
 # IMPORT PAGES
@@ -94,44 +58,35 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 # -------------------------------
-# TOP NAVIGATION
+# TOP NAV
 # -------------------------------
-title_col, nav1, nav2, nav3, nav4 = st.columns([6,1,1,1,1])
+col1, col2, col3, col4, col5 = st.columns([6,1,1,1,1])
 
-with title_col:
+with col1:
     st.markdown("## 🇮🇳 Sales Intelligence Platform")
 
-with nav1:
-    if st.button("Home"):
-        st.session_state.page = "Home"
-
-with nav2:
-    if st.button("Predict"):
-        st.session_state.page = "Predict"
-
-with nav3:
-    if st.button("Report"):
-        st.session_state.page = "Report"
-
-with nav4:
-    if st.button("Dev"):
-        st.session_state.page = "Dev"
+with col2:
+    if st.button("Home"): st.session_state.page = "Home"
+with col3:
+    if st.button("Predict"): st.session_state.page = "Predict"
+with col4:
+    if st.button("Report"): st.session_state.page = "Report"
+with col5:
+    if st.button("Dev"): st.session_state.page = "Dev"
 
 st.markdown("---")
 
 # -------------------------------
 # ROUTING
 # -------------------------------
-page = st.session_state.page
-
-if page == "Home":
+if st.session_state.page == "Home":
     home.app(df)
 
-elif page == "Predict":
-    predictions.app()
+elif st.session_state.page == "Predict":
+    predictions.app(df)
 
-elif page == "Report":
+elif st.session_state.page == "Report":
     report.app(df)
 
-elif page == "Dev":
+elif st.session_state.page == "Dev":
     developer.app()
