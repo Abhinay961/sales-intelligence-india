@@ -35,6 +35,9 @@ if not os.path.exists(data_path):
 # -------------------------------
 df = pd.read_csv(data_path)
 
+generate_data()
+run_preprocessing()
+
 # -------------------------------
 # IMPORT PAGES (AFTER DATA READY)
 # -------------------------------

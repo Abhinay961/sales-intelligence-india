@@ -1,27 +1,27 @@
-import joblib
-import numpy as np
 import os
 import pandas as pd
+import numpy as np
+import joblib
 
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
 
-# -------------------------------
-# PATH SETUP
-# -------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-lr_path = os.path.join(BASE_DIR, "models/lr.pkl")
-xgb_path = os.path.join(BASE_DIR, "models/xgb.pkl")
-data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+DATA_PATH = os.path.join(BASE_DIR, "data/processed/data.csv")
 
-os.makedirs(os.path.join(BASE_DIR, "models"), exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+lr_path = os.path.join(MODEL_DIR, "lr.pkl")
+xgb_path = os.path.join(MODEL_DIR, "xgb.pkl")
+
 
 # -------------------------------
-# TRAIN MODEL IF NOT EXISTS
+# TRAIN MODELS
 # -------------------------------
 def train_models():
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(DATA_PATH)
 
     X = df[["price", "quantity", "discount", "month"]]
     y = df["revenue"]
@@ -34,20 +34,25 @@ def train_models():
 
     return lr, xgb
 
-# -------------------------------
-# LOAD OR TRAIN
-# -------------------------------
-if not os.path.exists(lr_path) or not os.path.exists(xgb_path):
-    print("⚠️ Models not found → Training now...")
-    lr, xgb = train_models()
-else:
-    lr = joblib.load(lr_path)
-    xgb = joblib.load(xgb_path)
 
 # -------------------------------
-# PREDICT FUNCTION
+# LOAD OR TRAIN MODELS
+# -------------------------------
+def load_models():
+    if not os.path.exists(lr_path) or not os.path.exists(xgb_path):
+        print("⚠️ Models not found → Training...")
+        return train_models()
+    
+    return joblib.load(lr_path), joblib.load(xgb_path)
+
+
+# -------------------------------
+# MAIN PREDICT FUNCTION
 # -------------------------------
 def predict(price, quantity, discount, month, model="xgb"):
+
+    lr, xgb = load_models()  # ✅ SAFE NOW
+
     data = np.array([[price, quantity, discount, month]])
 
     if model == "lr":
