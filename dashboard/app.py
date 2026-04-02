@@ -11,7 +11,7 @@ sys.path.insert(0, BASE_DIR)
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
 # -------------------------------
-# IMPORT AFTER PATH FIX
+# IMPORT DATA FUNCTIONS
 # -------------------------------
 from src.data_generation import generate_data
 from src.preprocessing import run_preprocessing
@@ -34,9 +34,6 @@ if not os.path.exists(data_path):
 # LOAD DATA
 # -------------------------------
 df = pd.read_csv(data_path)
-
-generate_data()
-run_preprocessing()
 
 # -------------------------------
 # IMPORT PAGES (AFTER DATA READY)
