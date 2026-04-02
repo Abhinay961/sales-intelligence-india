@@ -29,12 +29,44 @@ data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 # LOAD OR FIX DATA PIPELINE
 # -------------------------------
 def load_or_create_data():
-    if not os.path.exists(data_path):
-        st.warning("⚠️ Generating dataset...")
+    try:
+        if not os.path.exists(data_path):
+            generate_data()
+            run_preprocessing()
+
+        df = pd.read_csv(data_path)
+
+        # Ensure it's valid DataFrame
+        if df is None or df.empty:
+            raise ValueError("Empty DataFrame")
+
+        # Ensure required columns
+        required_cols = ["price", "quantity", "discount", "month", "revenue"]
+
+        for col in required_cols:
+            if col not in df.columns:
+                raise ValueError(f"Missing column: {col}")
+
+        # Add profit if missing (🔥 FIX)
+        if "profit" not in df.columns:
+            df["cost"] = df["price"] * 0.7
+            df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
+
+        return df
+
+    except Exception as e:
+        st.error(f"Data loading failed → regenerating: {e}")
+
         generate_data()
         run_preprocessing()
 
-    df = pd.read_csv(data_path)
+        df = pd.read_csv(data_path)
+
+        # Always ensure profit exists
+        df["cost"] = df["price"] * 0.7
+        df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
+
+        return df
 
     # -------------------------------
     # PIPELINE VALIDATION (CRITICAL FIX)
