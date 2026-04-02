@@ -2,18 +2,13 @@ import streamlit as st
 import pandas as pd
 import sys, os
 
-# -------------------------------
-# PATH FIX (IMPORTANT)
-# -------------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(BASE_DIR)
-
-from dashboard.pages import home, predictions, report, developer
 
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
 # -------------------------------
-# AUTO SETUP (DATA GENERATION)
+# ENSURE DATA EXISTS FIRST
 # -------------------------------
 os.makedirs(os.path.join(BASE_DIR, "data/raw"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
@@ -21,21 +16,22 @@ os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
 data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 if not os.path.exists(data_path):
-    st.warning("⚠️ First run detected. Generating dataset...")
+    st.warning("⚠️ Generating dataset...")
 
     from src.data_generation import generate_data
     generate_data()
 
-    import src.preprocessing  # runs preprocessing script
+    import src.preprocessing  # runs preprocessing
 
 # -------------------------------
-# LOAD DATA SAFELY
+# NOW SAFE TO IMPORT
 # -------------------------------
-try:
-    df = pd.read_csv(data_path)
-except Exception as e:
-    st.error(f"❌ Error loading data: {e}")
-    st.stop()
+from dashboard.pages import home, predictions, report, developer
+
+# -------------------------------
+# LOAD DATA
+# -------------------------------
+df = pd.read_csv(data_path)
 
 # -------------------------------
 # SESSION STATE
