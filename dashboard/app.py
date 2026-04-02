@@ -3,7 +3,7 @@ import pandas as pd
 import sys, os
 
 # -------------------------------
-# FIX PATH
+# PATH FIX
 # -------------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BASE_DIR)
@@ -11,14 +11,14 @@ sys.path.insert(0, BASE_DIR)
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
 # -------------------------------
-# ENSURE FOLDERS EXIST
+# ENSURE FOLDERS
 # -------------------------------
 os.makedirs(os.path.join(BASE_DIR, "data/raw"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "models"), exist_ok=True)
 
 # -------------------------------
-# IMPORT DATA FUNCTIONS
+# IMPORT PIPELINE FUNCTIONS
 # -------------------------------
 from src.data_generation import generate_data
 from src.preprocessing import run_preprocessing
@@ -26,18 +26,34 @@ from src.preprocessing import run_preprocessing
 data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 # -------------------------------
-# GENERATE DATA IF MISSING
+# LOAD OR FIX DATA PIPELINE
 # -------------------------------
-if not os.path.exists(data_path):
-    st.warning("⚠️ First run: Generating dataset...")
+def load_or_create_data():
+    if not os.path.exists(data_path):
+        st.warning("⚠️ Generating dataset...")
+        generate_data()
+        run_preprocessing()
 
-    generate_data()
-    run_preprocessing()
+    df = pd.read_csv(data_path)
+
+    # -------------------------------
+    # PIPELINE VALIDATION (CRITICAL FIX)
+    # -------------------------------
+    required_cols = ["price", "quantity", "discount", "month", "revenue", "profit"]
+
+    if not all(col in df.columns for col in required_cols):
+        st.warning("⚠️ Data schema mismatch → regenerating dataset...")
+        generate_data()
+        run_preprocessing()
+        df = pd.read_csv(data_path)
+
+    return df
+
 
 # -------------------------------
-# LOAD DATA
+# LOAD DATA SAFELY
 # -------------------------------
-df = pd.read_csv(data_path)
+df = load_or_create_data()
 
 # -------------------------------
 # IMPORT PAGES (AFTER DATA READY)
@@ -59,16 +75,20 @@ with title_col:
     st.markdown("## 🇮🇳 Sales Intelligence Platform")
 
 with nav1:
-    if st.button("Home"): st.session_state.page = "Home"
+    if st.button("Home"):
+        st.session_state.page = "Home"
 
 with nav2:
-    if st.button("Predict"): st.session_state.page = "Predict"
+    if st.button("Predict"):
+        st.session_state.page = "Predict"
 
 with nav3:
-    if st.button("Report"): st.session_state.page = "Report"
+    if st.button("Report"):
+        st.session_state.page = "Report"
 
 with nav4:
-    if st.button("Dev"): st.session_state.page = "Dev"
+    if st.button("Dev"):
+        st.session_state.page = "Dev"
 
 st.markdown("---")
 
