@@ -19,4 +19,4 @@ def app():
 
     if st.button("Predict", key="predict_btn"):
         result = predict(price, quantity, discount, month, model)
-        st.success(f"💰 Revenue: ₹{int(result)}")
+        st.success(f"💰 Predicted Revenue: ₹{int(result)}")
