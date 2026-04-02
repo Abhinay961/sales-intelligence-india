@@ -7,7 +7,10 @@ def app(df):
     col1,col2,col3 = st.columns(3)
     col1.metric("Revenue", int(df.revenue.sum()))
     col2.metric("Orders", len(df))
-    col3.metric("Profit", int(df.profit.sum()))
+    if "profit" in df.columns:
+        col3.metric("Profit", int(df["profit"].sum()))
+    else:
+        col3.metric("Profit", "Not Available")
 
     st.subheader("📈 Monthly Trend")
     state = st.selectbox("Select State", df.state.unique())

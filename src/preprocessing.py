@@ -11,9 +11,12 @@ def run_preprocessing():
     df["month"] = df["order_date"].dt.month
 
     # -------------------------------
-    # ADD PROFIT COLUMN (FIX)
+    # FORCE PROFIT CREATION (SAFE)
     # -------------------------------
-    df["cost"] = df["price"] * 0.7   # assume 30% margin
+    df["cost"] = df["price"] * 0.7
     df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
+
+    # 🔥 DEBUG PRINT (IMPORTANT)
+    print("Columns after preprocessing:", df.columns)
 
     df.to_csv("data/processed/data.csv", index=False)
