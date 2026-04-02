@@ -1,16 +1,22 @@
 import pandas as pd
 import os
 
-os.makedirs("data/processed", exist_ok=True)
+def run_preprocessing():
 
-df = pd.read_csv("data/raw/sales.csv")
+    os.makedirs("data/processed", exist_ok=True)
 
-df["order_date"] = pd.to_datetime(df["order_date"])
-df["month"] = df["order_date"].dt.month
+    df = pd.read_csv("data/raw/sales.csv")
 
-df["cost"] = df["price"]*0.7
-df["profit"] = (df["price"]-df["cost"])*df["quantity"]
+    df["order_date"] = pd.to_datetime(df["order_date"])
+    df["month"] = df["order_date"].dt.month
 
-df.to_csv("data/processed/data.csv", index=False)
+    df["cost"] = df["price"] * 0.7
+    df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
 
-print("✅ Processed data ready")
+    df.to_csv("data/processed/data.csv", index=False)
+
+    print("✅ Preprocessing Done")
+
+
+if __name__ == "__main__":
+    run_preprocessing()

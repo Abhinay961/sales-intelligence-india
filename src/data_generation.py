@@ -4,50 +4,59 @@ import random
 import os
 from datetime import datetime, timedelta
 
-os.makedirs("data/raw", exist_ok=True)
+def generate_data(n=9000):
 
-states = ["Maharashtra","Delhi","Karnataka","Tamil Nadu","Gujarat","West Bengal","Uttar Pradesh"]
-regions_map = {
-    "Maharashtra":"West","Delhi":"North","Karnataka":"South",
-    "Tamil Nadu":"South","Gujarat":"West","West Bengal":"East","Uttar Pradesh":"North"
-}
+    os.makedirs("data/raw", exist_ok=True)
 
-products_by_region = {
-    "North":["Winter Jacket","Heater","Smartphone"],
-    "South":["AC","Fan","Laptop"],
-    "West":["TV","Refrigerator","Mixer"],
-    "East":["Mobile","Headphones","Tablet"]
-}
+    states = ["Maharashtra","Delhi","Karnataka","Tamil Nadu","Gujarat","West Bengal","Uttar Pradesh"]
+    regions_map = {
+        "Maharashtra":"West","Delhi":"North","Karnataka":"South",
+        "Tamil Nadu":"South","Gujarat":"West","West Bengal":"East","Uttar Pradesh":"North"
+    }
 
-data = []
+    products_by_region = {
+        "North":["Winter Jacket","Heater","Smartphone"],
+        "South":["AC","Fan","Laptop"],
+        "West":["TV","Refrigerator","Mixer"],
+        "East":["Mobile","Headphones","Tablet"]
+    }
 
-for i in range(9000):
-    state = random.choice(states)
-    region = regions_map[state]
-    product = random.choice(products_by_region[region])
+    data = []
 
-    price = np.random.randint(500,30000)
-    quantity = np.random.randint(1,5)
-    discount = np.random.choice([0,5,10,15,20])
+    for i in range(n):
+        state = random.choice(states)
+        region = regions_map[state]
+        product = random.choice(products_by_region[region])
 
-    date = datetime(2023,1,1) + timedelta(days=np.random.randint(365))
-    weekend = date.weekday()>=5
+        price = np.random.randint(500,30000)
+        quantity = np.random.randint(1,5)
+        discount = np.random.choice([0,5,10,15,20])
 
-    if weekend:
-        quantity += 1
-        discount += 5
+        date = datetime(2023,1,1) + timedelta(days=np.random.randint(365))
+        weekend = date.weekday() >= 5
 
-    revenue = price * quantity * (1-discount/100)
+        if weekend:
+            quantity += 1
+            discount += 5
 
-    data.append([
-        i+1,date,state,region,product,
-        price,quantity,discount,revenue
+        revenue = price * quantity * (1-discount/100)
+
+        data.append([
+            i+1,date,state,region,product,
+            price,quantity,discount,revenue
+        ])
+
+    df = pd.DataFrame(data, columns=[
+        "order_id","order_date","state","region",
+        "product_name","price","quantity","discount","revenue"
     ])
 
-df = pd.DataFrame(data, columns=[
-    "order_id","order_date","state","region",
-    "product_name","price","quantity","discount","revenue"
-])
+    df.to_csv("data/raw/sales.csv", index=False)
+    print("✅ Data Generated")
 
-df.to_csv("data/raw/sales.csv", index=False)
-print("✅ India dataset created")
+    return df
+
+
+# Optional: run standalone
+if __name__ == "__main__":
+    generate_data()

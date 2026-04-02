@@ -21,7 +21,8 @@ if not os.path.exists(data_path):
     from src.data_generation import generate_data
     generate_data()
 
-    import src.preprocessing  # runs preprocessing
+    from src.preprocessing import run_preprocessing
+    run_preprocessing()  # runs preprocessing
 
 # -------------------------------
 # NOW SAFE TO IMPORT
