@@ -2,13 +2,22 @@ import streamlit as st
 import pandas as pd
 import sys, os
 
+# -------------------------------
+# FIX PATH (CRITICAL)
+# -------------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(BASE_DIR)
+sys.path.insert(0, BASE_DIR)
 
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
 # -------------------------------
-# ENSURE DATA EXISTS FIRST
+# IMPORT AFTER PATH FIX
+# -------------------------------
+from src.data_generation import generate_data
+from src.preprocessing import run_preprocessing
+
+# -------------------------------
+# ENSURE DATA EXISTS
 # -------------------------------
 os.makedirs(os.path.join(BASE_DIR, "data/raw"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
@@ -16,23 +25,20 @@ os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
 data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 if not os.path.exists(data_path):
-    st.warning("⚠️ Generating dataset...")
+    st.warning("⚠️ First run: Generating dataset...")
 
-    from src.data_generation import generate_data
     generate_data()
-
-    from src.preprocessing import run_preprocessing
-    run_preprocessing()  # runs preprocessing
-
-# -------------------------------
-# NOW SAFE TO IMPORT
-# -------------------------------
-from dashboard.pages import home, predictions, report, developer
+    run_preprocessing()
 
 # -------------------------------
 # LOAD DATA
 # -------------------------------
 df = pd.read_csv(data_path)
+
+# -------------------------------
+# IMPORT PAGES (AFTER DATA READY)
+# -------------------------------
+from dashboard.pages import home, predictions, report, developer
 
 # -------------------------------
 # SESSION STATE
@@ -41,7 +47,7 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 # -------------------------------
-# TOP NAVIGATION (RIGHT CORNER)
+# TOP NAVIGATION
 # -------------------------------
 title_col, nav1, nav2, nav3, nav4 = st.columns([6,1,1,1,1])
 

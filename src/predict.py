@@ -6,6 +6,9 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
 
+# -------------------------------
+# PATH SETUP
+# -------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 lr_path = os.path.join(BASE_DIR, "models/lr.pkl")
@@ -14,9 +17,9 @@ data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 os.makedirs(os.path.join(BASE_DIR, "models"), exist_ok=True)
 
-# -----------------------------
+# -------------------------------
 # TRAIN MODEL IF NOT EXISTS
-# -----------------------------
+# -------------------------------
 def train_models():
     df = pd.read_csv(data_path)
 
@@ -31,9 +34,9 @@ def train_models():
 
     return lr, xgb
 
-# -----------------------------
+# -------------------------------
 # LOAD OR TRAIN
-# -----------------------------
+# -------------------------------
 if not os.path.exists(lr_path) or not os.path.exists(xgb_path):
     print("⚠️ Models not found → Training now...")
     lr, xgb = train_models()
@@ -41,9 +44,9 @@ else:
     lr = joblib.load(lr_path)
     xgb = joblib.load(xgb_path)
 
-# -----------------------------
-# PREDICTION FUNCTION
-# -----------------------------
+# -------------------------------
+# PREDICT FUNCTION
+# -------------------------------
 def predict(price, quantity, discount, month, model="xgb"):
     data = np.array([[price, quantity, discount, month]])
 
