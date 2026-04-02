@@ -7,9 +7,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 lr_path = os.path.join(BASE_DIR, "models/lr.pkl")
 xgb_path = os.path.join(BASE_DIR, "models/xgb.pkl")
 
-# Debug prints (optional)
-print("Loading models from:", lr_path)
+# -----------------------------
+# AUTO TRAIN IF MODEL MISSING
+# -----------------------------
+if not os.path.exists(lr_path) or not os.path.exists(xgb_path):
+    print("⚠️ Models not found. Training now...")
 
+    import subprocess
+    subprocess.run(["python", "src/train_model.py"])
+
+# -----------------------------
+# LOAD MODELS
+# -----------------------------
 lr = joblib.load(lr_path)
 xgb = joblib.load(xgb_path)
 

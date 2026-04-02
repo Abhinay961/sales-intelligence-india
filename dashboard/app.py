@@ -2,18 +2,43 @@ import streamlit as st
 import pandas as pd
 import sys, os
 
-# Fix imports
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# -------------------------------
+# PATH FIX (IMPORTANT)
+# -------------------------------
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(BASE_DIR)
 
 from dashboard.pages import home, predictions, report, developer
 
 st.set_page_config(page_title="Sales Intelligence", layout="wide")
 
-# Load data
-df = pd.read_csv("data/processed/data.csv")
+# -------------------------------
+# AUTO SETUP (DATA GENERATION)
+# -------------------------------
+os.makedirs(os.path.join(BASE_DIR, "data/raw"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "data/processed"), exist_ok=True)
+
+data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
+
+if not os.path.exists(data_path):
+    st.warning("⚠️ First run detected. Generating dataset...")
+
+    from src.data_generation import generate_data
+    generate_data()
+
+    import src.preprocessing  # runs preprocessing script
 
 # -------------------------------
-# SESSION STATE (IMPORTANT)
+# LOAD DATA SAFELY
+# -------------------------------
+try:
+    df = pd.read_csv(data_path)
+except Exception as e:
+    st.error(f"❌ Error loading data: {e}")
+    st.stop()
+
+# -------------------------------
+# SESSION STATE
 # -------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "Home"
@@ -41,6 +66,8 @@ with nav3:
 with nav4:
     if st.button("Dev", key="nav_dev"):
         st.session_state.page = "Dev"
+
+st.markdown("---")
 
 # -------------------------------
 # ROUTING
