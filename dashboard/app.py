@@ -26,7 +26,7 @@ from src.preprocessing import run_preprocessing
 data_path = os.path.join(BASE_DIR, "data/processed/data.csv")
 
 # -------------------------------
-# LOAD OR FIX DATA PIPELINE
+# SAFE DATA LOADER (FINAL FIX)
 # -------------------------------
 def load_or_create_data():
     try:
@@ -36,59 +36,54 @@ def load_or_create_data():
 
         df = pd.read_csv(data_path)
 
-        # Ensure it's valid DataFrame
         if df is None or df.empty:
             raise ValueError("Empty DataFrame")
 
-        # Ensure required columns
+        # REQUIRED COLUMNS
         required_cols = ["price", "quantity", "discount", "month", "revenue"]
 
         for col in required_cols:
             if col not in df.columns:
                 raise ValueError(f"Missing column: {col}")
 
-        # Add profit if missing (🔥 FIX)
+        # ADD PROFIT IF MISSING
         if "profit" not in df.columns:
             df["cost"] = df["price"] * 0.7
             df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
 
+        # ADD PRODUCT IF MISSING (🔥 FINAL FIX)
+        if "product_name" not in df.columns:
+            df["product_name"] = "Product"
+
+        if "product_category" not in df.columns:
+            df["product_category"] = "General"
+
         return df
 
     except Exception as e:
-        st.error(f"Data loading failed → regenerating: {e}")
+        st.warning(f"⚠️ Fixing data pipeline: {e}")
 
         generate_data()
         run_preprocessing()
 
         df = pd.read_csv(data_path)
 
-        # Always ensure profit exists
         df["cost"] = df["price"] * 0.7
         df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
 
+        df["product_name"] = df.get("product_name", "Product")
+        df["product_category"] = df.get("product_category", "General")
+
         return df
-
-    # -------------------------------
-    # PIPELINE VALIDATION (CRITICAL FIX)
-    # -------------------------------
-    required_cols = ["price", "quantity", "discount", "month", "revenue", "profit"]
-
-    if not all(col in df.columns for col in required_cols):
-        st.warning("⚠️ Data schema mismatch → regenerating dataset...")
-        generate_data()
-        run_preprocessing()
-        df = pd.read_csv(data_path)
-
-    return df
 
 
 # -------------------------------
-# LOAD DATA SAFELY
+# LOAD DATA
 # -------------------------------
 df = load_or_create_data()
 
 # -------------------------------
-# IMPORT PAGES (AFTER DATA READY)
+# IMPORT PAGES
 # -------------------------------
 from dashboard.pages import home, predictions, report, developer
 
