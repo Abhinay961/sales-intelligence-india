@@ -5,24 +5,29 @@ import os
 def generate_pdf(df):
 
     os.makedirs("reports", exist_ok=True)
-
     file_path = "reports/business_report.pdf"
 
     doc = SimpleDocTemplate(file_path)
     styles = getSampleStyleSheet()
-
     elements = []
+
+    # -------------------------------
+    # 🔥 SAFE COLUMN HANDLING
+    # -------------------------------
+
+    # Ensure revenue
+    if "revenue" not in df.columns:
+        df["revenue"] = df["price"] * df["quantity"] * (1 - df["discount"]/100)
+
+    # Ensure profit
+    if "profit" not in df.columns:
+        df["cost"] = df["price"] * 0.7
+        df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
 
     # -------------------------------
     # METRICS
     # -------------------------------
     total_revenue = int(df["revenue"].sum())
-
-    # SAFE PROFIT FIX
-    if "profit" not in df.columns:
-        df["cost"] = df["price"] * 0.7
-        df["profit"] = (df["price"] - df["cost"]) * df["quantity"]
-
     total_profit = int(df["profit"].sum())
 
     # -------------------------------
