@@ -1,35 +1,31 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 
 def app(df):
 
-    st.markdown("# 🧠 Sales Decision Engine")
-    st.markdown("Optimize pricing, maximize revenue, and simulate business scenarios.")
-
-    st.markdown("---")
+    col_p1, col_p2 = st.columns([3, 1])
+    with col_p1:
+        st.markdown("# 🧠 Sales Decision Engine")
+        st.markdown("Optimize pricing, maximize revenue, and simulate business scenarios.")
+    with col_p2:
+        st.image("https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800", use_column_width=True)
 
     # ===============================
-    # 🔹 FILTERS
+    # 🔹 FILTERS IN SIDEBAR
     # ===============================
-    col1, col2, col3 = st.columns(3)
+    st.sidebar.markdown("### ⚙️ Simulation Parameters")
 
     categories = sorted(df["product_category"].unique())
     states = sorted(df["state"].unique())
 
-    with col1:
-        category = st.selectbox("📦 Category", categories)
-
-    with col2:
-        state = st.selectbox("📍 State", states)
-
-    with col3:
-        price = st.slider("💲 Price", 100, 80000, 1000)
-
-    discount = st.slider("🏷️ Discount (%)", 0, 30, 10)
-    month = st.slider("📅 Month", 1, 12, 6)
-
-    st.markdown("---")
+    category = st.sidebar.selectbox("📦 Category", categories)
+    state = st.sidebar.selectbox("📍 State", states)
+    price = st.sidebar.slider("💲 Price", 100, 80000, 1000)
+    discount = st.sidebar.slider("🏷️ Discount (%)", 0, 30, 10)
+    month = st.sidebar.slider("📅 Month", 1, 12, 6)
 
     # ===============================
     # 🔹 DEMAND FUNCTION
@@ -93,7 +89,7 @@ def app(df):
         st.markdown("---")
 
         # ===============================
-        # DEMAND CURVE
+        # DEMAND CURVE (PLOTLY)
         # ===============================
         st.subheader("📉 Demand vs Price")
 
@@ -101,7 +97,17 @@ def app(df):
         demands = [calculate_demand(p, discount, month, category, state) for p in prices]
 
         chart_df = pd.DataFrame({"Price": prices, "Demand": demands})
-        st.line_chart(chart_df.set_index("Price"))
+        
+        fig = px.area(chart_df, x="Price", y="Demand", 
+                      title=f"Demand Sensitivity for {category} in {state}",
+                      color_discrete_sequence=["#00f2fe"], template="plotly_dark")
+        
+        # Mark current price
+        fig.add_vline(x=price, line_width=3, line_dash="dash", line_color="#ff4b4b", 
+                      annotation_text=f"Current: ₹{price}")
+                      
+        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("---")
 
@@ -133,21 +139,33 @@ def app(df):
         # ===============================
         st.markdown("### 📊 Why this works")
 
-        st.write(
-            f"""
-            • The optimal price ₹{best_price} balances **demand and margin**.  
-            • At lower prices, demand increases but profit per unit drops.  
-            • At higher prices, profit per unit increases but demand falls.  
-            • The model finds the **sweet spot where total profit is maximized**.  
+        col_w1, col_w2 = st.columns(2)
 
-            👉 In **{state}**, demand is influenced by regional buying power.  
-            👉 In **{category}**, customer sensitivity to price affects sales volume.  
+        with col_w1:
+            st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600", use_column_width=True)
+            st.info(
+                f"""
+                **Mathematical Relationship:**  
+                - **Best Price (₹{best_price:,}):** The specific price point that perfectly balances unit demand with unit margin.  
+                - **Revenue at Optimal (₹{int(best_revenue):,}):** Total gross income (`Price × Demand`).  
+                - **Max Profit (₹{int(best_profit):,}):** Net gain (`Revenue - Cost`). 
+                """
+            )
 
-            💡 Strategy:
-            - Use this price for **maximum profit**
-            - Slightly lower price if your goal is **market capture (higher sales)**
-            """
-        )
+        with col_w2:
+            st.image("https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600", use_column_width=True)
+            st.info(
+                f"""
+                **The Sweet Spot & Strategy:**  
+                Profit is maximized at **₹{best_price:,}**. Raising the price kills demand; lowering it ruins margins.
+
+                👉 In **{state}**, demand is scaled by regional buying power.  
+                👉 In **{category}**, customer price sensitivity affects volume.  
+
+                **💡 Executive Strategy:**
+                Use **₹{best_price:,}** for maximum profitability. Lower it only for rapid market capture.
+                """
+            )
 
         st.markdown("---")
 

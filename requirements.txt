@@ -8,3 +8,4 @@ xgboost
 sqlalchemy
 joblib
 reportlab
+plotly
